@@ -1,17 +1,16 @@
-package com.ibm.wala.examples.util;
+package com.polymtl.hello.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import com.ibm.wala.ipa.callgraph.AnalysisScope;
 import com.ibm.wala.util.config.FileOfClasses;
 
-public class ExampleUtil {
+public class BasicUtil {
 
 	// more aggressive exclusions to avoid library blowup
 	  // in interprocedural tests
-  private static final String EXCLUSIONS = "java\\/awt\\/.*\n" + 
+  	private static final String EXCLUSIONS = "java\\/awt\\/.*\n" +
   		"javax\\/swing\\/.*\n" + 
   		"sun\\/awt\\/.*\n" + 
   		"sun\\/swing\\/.*\n" + 
@@ -25,8 +24,8 @@ public class ExampleUtil {
   		"java\\/security\\/.*\n" + 
   		"";
 
-  public static void addDefaultExclusions(AnalysisScope scope) throws UnsupportedEncodingException, IOException {
-	    scope.setExclusions(new FileOfClasses(new ByteArrayInputStream(ExampleUtil.EXCLUSIONS.getBytes("UTF-8"))));
-  }
+	public static void addDefaultExclusions(AnalysisScope scope) throws IOException {
+		scope.setExclusions(new FileOfClasses(new ByteArrayInputStream(BasicUtil.EXCLUSIONS.getBytes("UTF-8"))));
+	}
 	  
 }

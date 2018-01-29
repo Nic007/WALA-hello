@@ -7,16 +7,16 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Nicolas Cloutier - Polymtl Modification for an easy build
  *******************************************************************************/
-package com.ibm.wala.examples.drivers;
+package com.polymtl.hello.drivers;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.io.IOException;
 import java.util.Collection;
 
 import com.ibm.wala.classLoader.IClass;
-import com.ibm.wala.examples.util.ExampleUtil;
-import com.ibm.wala.ipa.callgraph.AnalysisScope;
 import com.ibm.wala.ipa.cha.ClassHierarchy;
 import com.ibm.wala.ipa.cha.ClassHierarchyFactory;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
@@ -24,57 +24,36 @@ import com.ibm.wala.types.ClassLoaderReference;
 import com.ibm.wala.util.Predicate;
 import com.ibm.wala.util.WalaException;
 import com.ibm.wala.util.collections.CollectionFilter;
-import com.ibm.wala.util.config.AnalysisScopeReader;
 import com.ibm.wala.util.graph.Graph;
 import com.ibm.wala.util.graph.GraphSlicer;
 import com.ibm.wala.util.graph.impl.SlowSparseNumberedGraph;
-import com.ibm.wala.viz.DotUtil;
-import com.ibm.wala.viz.PDFViewUtil;
 
 /**
- * 
- * This simple example WALA application builds a TypeHierarchy and fires off
- * ghostview to viz a DOT representation.
- * 
- * @author sfink
+ *
+ * This simple example WALA application analyze a project and push it.
+ *
+ * @author Nicolas Cloutier
  */
-public class PDFTypeHierarchy {
-  // This example takes one command-line argument, so args[1] should be the "-classpath" parameter
-  final static int CLASSPATH_INDEX = 1;  
-
-  public final static String DOT_FILE = "temp.dt";
-
-  private final static String PDF_FILE = "th.pdf";
-
-  public static void main(String[] args) throws IOException {
-    run(args);
-  }
-
-  public static Process run(String[] args) throws IOException {
+public class DumpWala extends BasicAnalysis {
+  public void run() throws IOException {
     try {
-      validateCommandLine(args);
-      String classpath = args[CLASSPATH_INDEX];
-      AnalysisScope scope = AnalysisScopeReader.makeJavaBinaryAnalysisScope(classpath, null);
-      ExampleUtil.addDefaultExclusions(scope);
-
       // invoke WALA to build a class hierarchy
-      ClassHierarchy cha = ClassHierarchyFactory.make(scope);
-
+      ClassHierarchy cha = ClassHierarchyFactory.make(this.scope);
       Graph<IClass> g = typeHierarchy2Graph(cha);
-
       g = pruneForAppLoader(g);
-      //String dotFile = "/tmp" + File.separatorChar + DOT_FILE;
-      String dotFile = File.createTempFile("out", ".dt").getAbsolutePath();
-      String pdfFile = File.createTempFile("out", ".pdf").getAbsolutePath();
-      String dotExe = "dot";
-      String gvExe = "open";
-      DotUtil.dotify(g, null, dotFile, pdfFile, dotExe);
-      return PDFViewUtil.launchPDFView(pdfFile, gvExe);
 
+      // Dump graph to file
+      String outFile = File.createTempFile("out", ".txt").getAbsolutePath();
+      System.out.println(outFile);
+      try(PrintWriter out = new PrintWriter(outFile)) {
+          out.println(g);
+      }
+
+      return;
     } catch (WalaException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
-      return null;
+      return;
     }
   }
 
@@ -82,7 +61,7 @@ public class PDFTypeHierarchy {
     Collection<T> slice = GraphSlicer.slice(g, f);
     return GraphSlicer.prune(g, new CollectionFilter<>(slice));
   }
-  
+
   /**
    * Restrict g to nodes from the Application loader
    */
@@ -94,23 +73,7 @@ public class PDFTypeHierarchy {
     };
     return pruneGraph(g, f);
   }
-  
-  /**
-   * Validate that the command-line arguments obey the expected usage.
-   * 
-   * Usage: args[0] : "-classpath" args[1] : String, a ";"-delimited class path
-   * 
-   * @throws UnsupportedOperationException if command-line is malformed.
-   */
-  public static void validateCommandLine(String[] args) {
-    if (args.length < 2) {
-      throw new UnsupportedOperationException("must have at least 2 command-line arguments");
-    }
-    if (!args[0].equals("-classpath")) {
-      throw new UnsupportedOperationException("invalid command-line, args[0] should be -classpath, but is " + args[0]);
-    }
-  }
-  
+
   /**
    * Return a view of an {@link IClassHierarchy} as a {@link Graph}, with edges from classes to immediate subtypes
    */
@@ -130,5 +93,5 @@ public class PDFTypeHierarchy {
       }
     }
     return result;
-  }  
+  }
 }
